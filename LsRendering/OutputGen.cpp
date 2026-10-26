@@ -9,14 +9,16 @@
 HeliosPoint LsProjector::makeHeliosPoint(LsVec2F pos, LsColor color) {
     HeliosPoint p;
 
-    p.x = static_cast<uint16_t>(std::clamp(std::round(pos.x), 0.f, static_cast<float>(this->canvasSize.x)));
-    p.y = static_cast<uint16_t>(std::clamp(std::round(pos.y), 0.f, static_cast<float>(this->canvasSize.y)));
+    LsVec2F heliosCanvasSize = {4095.f, 4095.f};
+    pos /= 16.f;
 
-    constexpr unsigned cmax =  UINT8_MAX;
-    p.r = static_cast<uint8_t>(std::min(color.r, cmax));
-    p.g = static_cast<uint8_t>(std::min(color.g, cmax));
-    p.b = static_cast<uint8_t>(std::min(color.b, cmax));
-    p.i = static_cast<uint8_t>(std::min(color.a, cmax));
+    p.x = static_cast<uint16_t>(std::clamp(std::round(pos.x), 0.f, heliosCanvasSize.x));
+    p.y = static_cast<uint16_t>(std::clamp(std::round(pos.y), 0.f, heliosCanvasSize.y));
+
+    p.r = color.r;
+    p.g = color.g;
+    p.b = color.b;
+    p.i = color.a;
 
     return p;
 }
@@ -26,7 +28,7 @@ std::vector<HeliosPoint> LsProjector::buildOptimalOutput() {
     std::vector<LsLine> lines;
     std::vector<LsColor> colors;
 
-    const LsVec2F canvasSizeF = {static_cast<float>(this->canvasSize.x), static_cast<float>(this->canvasSize.y)};
+    const LsVec2F canvasSizeF = {static_cast<float>(LsCanvasSize.x), static_cast<float>(LsCanvasSize.y)};
 
     // build a collection of lines, throwing away all lines invisible to the canvas, cropping the lines that are partially visible to the canvas
     for(auto& graphic : this->graphics) {
@@ -97,6 +99,7 @@ std::vector<HeliosPoint> LsProjector::buildOptimalOutput() {
                 line.end -= lineVecToEdge;
             }
 
+            // check for pesky corners
             if(line.start.x < -LsEpsilon || line.start.x > canvasSizeF.x + LsEpsilon || line.end.x < -LsEpsilon || line.end.x > canvasSizeF.x + LsEpsilon
                 || line.start.y < -LsEpsilon || line.start.y > canvasSizeF.y + LsEpsilon || line.end.y < -LsEpsilon || line.end.y > canvasSizeF.y + LsEpsilon)
                 continue;
@@ -126,8 +129,8 @@ std::vector<HeliosPoint> LsProjector::buildOptimalOutput() {
 
     float totalDistance = 0.f;
 
-    for(int i = 0; i < lines.size(); ++i) {
-        totalDistance += distance(lines[i].start, lines[i].end);
+    for(auto & line : lines) {
+        totalDistance += distance(line.start, line.end);
     }
     float distancePerPoint = totalDistance / static_cast<float>(this->maxPPS);
     //distancePerPoint = totalDistance / lines.size();

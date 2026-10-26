@@ -2,7 +2,13 @@
 #include <windows.h>
 #include <array>
 
+#include <chrono>
+
 #include "GOL.h"
+
+void pong() {
+
+}
 
 int main() {
 

@@ -10,13 +10,14 @@
 /// An LsGraphic contains an array of lines and an array of color channels. Each line maps to a single color channel and derives its color value from it. Its contents can be saved and loaded using ILDA files.
 class LsGraphic {
 private:
+
     friend class LsObject;
     std::vector<LsLine> lines;
     std::vector<unsigned> colorChannelMap; //index matches an index of a line. Value matches the index of a color channel.
     std::vector<LsColor> colors;
 
-    LsVec2F figureOutSize() const;
 public:
+
     /// @return A copy of the lines inside this graphic
     std::vector<LsLine> getLines() const;
 
@@ -36,16 +37,16 @@ public:
 
     /// Adds a line to this graphic
     /// @param colorChannel The index of a color channel within this graphic. If the channel doesn't exist, new ones are created until reaching the requested index, with the default value of white.
-    void addLine(const LsVec2F& start, const LsVec2F& end, const unsigned& colorChannel);
+    void addLine(LsVec2F start, LsVec2F end, unsigned colorChannel);
 
     /// Adds a line to this graphic
     /// @param colorChannel The index of a color channel within this graphic. If the channel doesn't exist, new ones are created until reaching the requested index, with the default value of white.
-    void addLine(const LsLine& line, const unsigned& colorChannel);
+    void addLine(LsLine line, unsigned colorChannel);
 
     /// Modifies the color value of a specific color channel within this graphic
     /// @param colorChannel The index of a color channel within this graphic. If the channel doesn't exist, new ones are created until reaching the requested index.
     /// The specified channel is created with the color value that was passed, the ones in between will have the default color of white.
-    void setColor(const LsColor& color, const unsigned& colorChannel);
+    void setColor(LsColor color, unsigned colorChannel);
 
     /// Loads the graphic from an ILDA file (.ild)
     /// @return True on success, False on failure.
@@ -55,7 +56,12 @@ public:
     /// @return True on success, False on failure.
     bool saveToFile(const std::string& filePath) const;
 
-    void logContents();
+    void downscaleTo12Bit();
+
+
+    void upscaleTo16Bit();
+
+    void logContents() const;
 
     LsGraphic() = default;
 };

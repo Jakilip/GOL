@@ -11,3 +11,4 @@ float distance(const LsVec2F& a, const LsVec2F& b);
 double distance(const LsVec2D& a, const LsVec2D& b);
 float angleTo(const LsVec2F& observer, const LsVec2F& target);
 double angleTo(const LsVec2D& observer, const LsVec2D& target);
+

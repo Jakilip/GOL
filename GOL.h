@@ -7,6 +7,8 @@
 #include "LsUtilities/LsCore.h"
 #include "LsUtilities/LsMath.h"
 #include "LsUtilities/LsTimer.h"
+#include "LsUtilities/LsCollisions.h"
+#include "LsUtilities/LsRandom.h"
 
 #include "LsRendering/LsGraphic.h"
 #include "LsRendering/LsObject.h"

@@ -2,6 +2,7 @@
 #include "LsCore.h"
 
 #include <cmath>
+#include <random>
 
 double distance(const LsVec2D& a, const LsVec2D& b) {
     return std::hypot(a.x - b.x, a.y - b.y);
