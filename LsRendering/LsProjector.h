@@ -20,17 +20,28 @@ private:
     LaserPoint laserPoint = {{0, 0}, 0};
 
     int validDevicesAmount;
-    unsigned maxPPS = 5000;
+
+    // device params
+    unsigned scanRate = 15000;
     unsigned framerate = 50;
     unsigned deviceID = UINT_MAX;
+
+    // optimization params
+    unsigned corneringLevel = 4;
+    unsigned accelerationLevel = 2;
+    unsigned blankingLevel = 2;
+    bool dynamicFramerate = false;
+    bool optimizePathing = false;
 public:
+
     bool setDevice(unsigned deviceID);
     void setFramerate(unsigned framerate);
-    void setMaxPPS(unsigned maxPPS);
+    void setScanRate(unsigned scanRate);
+    void setOptimizationConfig(unsigned corneringLevel, unsigned accelerationLevel, unsigned blankingLevel, bool dynamicFramerate);
 
     void closeDAC();
     unsigned getDeviceID();
-    unsigned getMaxPPS();
+    unsigned getScanRate();
     unsigned getFramerate();
 
     void draw(LsObject& object);

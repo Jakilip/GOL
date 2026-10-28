@@ -6,19 +6,26 @@ unsigned LsProjector::getDeviceID() { return this->deviceID; }
 
 unsigned LsProjector::getFramerate() { return this->framerate; }
 
-unsigned LsProjector::getMaxPPS() { return this->maxPPS; }
+unsigned LsProjector::getScanRate() { return this->scanRate; }
 
 void LsProjector::setFramerate(unsigned framerate) { this->framerate = framerate; }
 
-void LsProjector::setMaxPPS(unsigned maxPPS) { this->maxPPS = maxPPS; if (maxPPS > 30000)
-    std::cout << "Warning: set maxPPS to above 30k, it's very rare for lasers to go this high, and requesting point rates above the laser's limit can damage the hardware"; }
+void LsProjector::setScanRate(unsigned scanRate) { this->scanRate = scanRate; }
+
+void LsProjector::setOptimizationConfig(unsigned corneringLevel, unsigned accelerationLevel, unsigned blankingLevel, bool dynamicFramerate) {
+    this->corneringLevel = corneringLevel; this->accelerationLevel = accelerationLevel; this->blankingLevel = blankingLevel; this->dynamicFramerate = dynamicFramerate;
+}
 
 bool LsProjector::setDevice(unsigned deviceID) {
+    dac.CloseDevices();
+    dac.OpenDevices();
+
     if(validDevicesAmount >= deviceID+1) {
         this->deviceID = deviceID;
     }
     else
         this->deviceID = UINT_MAX;
+    return this->deviceID != UINT_MAX;
 }
 
 void LsProjector::draw(LsObject& object) {
@@ -46,8 +53,8 @@ void LsProjector::pushFrame() {
     }
 
     unsigned PPS = this->framerate * static_cast<unsigned>(output.size());
-    if(PPS > maxPPS)
-        PPS = maxPPS;
+    if(PPS > scanRate)
+        PPS = scanRate;
 
     dac.WriteFrame(deviceID, PPS, 0, output.data(), output.size());
 

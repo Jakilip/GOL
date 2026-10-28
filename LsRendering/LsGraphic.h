@@ -50,17 +50,13 @@ public:
 
     /// Loads the graphic from an ILDA file (.ild)
     /// @return True on success, False on failure.
-    bool loadFromFile(const std::string& filePath);
+    bool loadFromFile(const std::string& filePath, unsigned frameIndex = 0);
 
     /// Saves the graphic into an ILDA file (.ild)
     /// @return True on success, False on failure.
-    bool saveToFile(const std::string& filePath) const;
+    bool saveToFile(const std::string& filePath, unsigned ildaFormat = 5) const;
 
-    void downscaleTo12Bit();
-
-
-    void upscaleTo16Bit();
-
+    /// Logs lines and colors in this graphic
     void logContents() const;
 
     LsGraphic() = default;

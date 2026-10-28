@@ -28,8 +28,6 @@ std::vector<HeliosPoint> LsProjector::buildOptimalOutput() {
     std::vector<LsLine> lines;
     std::vector<LsColor> colors;
 
-    const LsVec2F canvasSizeF = {static_cast<float>(LsCanvasSize.x), static_cast<float>(LsCanvasSize.y)};
-
     // build a collection of lines, throwing away all lines invisible to the canvas, cropping the lines that are partially visible to the canvas
     for(auto& graphic : this->graphics) {
         auto glines = graphic.getLines();
@@ -41,19 +39,19 @@ std::vector<HeliosPoint> LsProjector::buildOptimalOutput() {
 
             if(line.start.x < 0 && line.end.x < 0)
                 continue;
-            if(line.start.x > canvasSizeF.x && line.end.x > canvasSizeF.x)
+            if(line.start.x > LsCanvasSize && line.end.x > LsCanvasSize)
                 continue;
             if(line.start.y < 0 && line.end.y < 0)
                 continue;
-            if(line.start.y > canvasSizeF.y && line.end.y > canvasSizeF.y)
+            if(line.start.y > LsCanvasSize && line.end.y > LsCanvasSize)
                 continue;
 
-            if(line.start.x < 0 || line.start.x > canvasSizeF.x) {
+            if(line.start.x < 0 || line.start.x > LsCanvasSize) {
                 float xDiff;
                 if(line.start.x < 0)
                     xDiff = line.start.x;
                 else {
-                    xDiff = line.start.x - canvasSizeF.x;
+                    xDiff = line.start.x - LsCanvasSize;
                 }
 
                 float vecMulti = xDiff / (line.end.x - line.start.x);
@@ -61,12 +59,12 @@ std::vector<HeliosPoint> LsProjector::buildOptimalOutput() {
 
                 line.start -= lineVecToEdge;
             }
-            if(line.end.x < 0 || line.end.x > canvasSizeF.x) {
+            if(line.end.x < 0 || line.end.x > LsCanvasSize) {
                 float xDiff;
                 if(line.end.x < 0)
                     xDiff = line.end.x;
                 else
-                    xDiff = line.end.x - canvasSizeF.x;
+                    xDiff = line.end.x - LsCanvasSize;
 
                 float vecMulti = xDiff / (line.start.x - line.end.x);
                 LsVec2F lineVecToEdge = {vecMulti * (line.start.x - line.end.x), vecMulti * (line.start.y - line.end.y)};
@@ -74,24 +72,24 @@ std::vector<HeliosPoint> LsProjector::buildOptimalOutput() {
                 line.end -= lineVecToEdge;
             }
 
-            if(line.start.y < 0 || line.start.y > canvasSizeF.y) {
+            if(line.start.y < 0 || line.start.y > LsCanvasSize) {
                 float yDiff;
                 if(line.start.y < 0)
                     yDiff = line.start.y;
                 else
-                    yDiff = line.start.y - canvasSizeF.y;
+                    yDiff = line.start.y - LsCanvasSize;
 
                 float vecMulti = yDiff / (line.end.y - line.start.y);
                 LsVec2F lineVecToEdge = {vecMulti * (line.end.x - line.start.x), vecMulti * (line.end.y - line.start.y)};
 
                 line.start -= lineVecToEdge;
             }
-            if(line.end.y < 0 || line.end.y > canvasSizeF.y) {
+            if(line.end.y < 0 || line.end.y > LsCanvasSize) {
                 float yDiff;
                 if(line.end.y < 0)
                     yDiff = line.end.y;
                 else
-                    yDiff = line.end.y - canvasSizeF.y;
+                    yDiff = line.end.y - LsCanvasSize;
 
                 float vecMulti = yDiff / (line.start.y - line.end.y);
                 LsVec2F lineVecToEdge = {vecMulti * (line.start.x - line.end.x), vecMulti * (line.start.y - line.end.y)};
@@ -100,20 +98,20 @@ std::vector<HeliosPoint> LsProjector::buildOptimalOutput() {
             }
 
             // check for pesky corners
-            if(line.start.x < -LsEpsilon || line.start.x > canvasSizeF.x + LsEpsilon || line.end.x < -LsEpsilon || line.end.x > canvasSizeF.x + LsEpsilon
-                || line.start.y < -LsEpsilon || line.start.y > canvasSizeF.y + LsEpsilon || line.end.y < -LsEpsilon || line.end.y > canvasSizeF.y + LsEpsilon)
+            if(line.start.x < -LsEpsilon || line.start.x > LsCanvasSize + LsEpsilon || line.end.x < -LsEpsilon || line.end.x > LsCanvasSize + LsEpsilon
+                || line.start.y < -LsEpsilon || line.start.y > LsCanvasSize + LsEpsilon || line.end.y < -LsEpsilon || line.end.y > LsCanvasSize + LsEpsilon)
                 continue;
 
             lines.emplace_back(glines[i]);
             colors.emplace_back(graphic.getColor(graphic.getColorChannel(i)));
         }
     }
-    if(lines.empty())
-        return output;
+
 
     //place blank line in between laser pos and first point
     lines.insert(lines.begin(), {laserPoint.currentPos, lines[0].start});
     colors.insert(colors.begin(), LsBlank);
+
 
     // generate blank lines in between line gaps
     for(int i = 0; i < lines.size()-1; ++i) {
@@ -123,19 +121,27 @@ std::vector<HeliosPoint> LsProjector::buildOptimalOutput() {
         }
     }
 
-    //place blank point at the end
-    lines.emplace_back(lines.back());
+
+    // place blank point at the end
+    LsVec2F endPos = lines.back().end;
+    lines.emplace_back(endPos, endPos);
     colors.emplace_back(LsBlank);
 
-    float totalDistance = 0.f;
 
+    // figure out the total distance to traverse
+    float totalDistance = 0.f;
     for(auto & line : lines) {
         totalDistance += distance(line.start, line.end);
     }
-    float distancePerPoint = totalDistance / static_cast<float>(this->maxPPS);
-    //distancePerPoint = totalDistance / lines.size();
+    float distancePerPoint = totalDistance / static_cast<float>(this->scanRate);
+    distancePerPoint = totalDistance / lines.size();
 
-    // generate output
+    laserPoint.currentPos = {lines.back().end.x, lines.back().end.y};
+
+
+    // build a list of points in float format
+    std::vector<LsVec2F> points;
+    std::vector<LsColor> pointsColors;
 
     for(int i = 0; i < lines.size(); ++i) {
         auto& line = lines[i];
@@ -144,17 +150,20 @@ std::vector<HeliosPoint> LsProjector::buildOptimalOutput() {
         float lineDist = distance(line.end, line.start);
 
         float pointsInThisLine = std::max(2.f, std::floor(lineDist / distancePerPoint));
-        //pointsInThisLine = 7.f;
+        pointsInThisLine = 4.f;
+        if(colors[i].a == 0)
+            pointsInThisLine *= 1.f;
 
         LsVec2F vecPerPoint = lineVec / (pointsInThisLine-1.f);
 
         for(int p = 0; p < static_cast<int>(pointsInThisLine); ++p) {
-            output.emplace_back(makeHeliosPoint(line.start + (vecPerPoint * static_cast<float>(p)), colors.at(i)));
+            points.emplace_back(line.start + (vecPerPoint * static_cast<float>(p)));
+            pointsColors.emplace_back(colors[i]);
         }
 
     }
 
-    laserPoint.currentPos = {static_cast<float>(output.back().x), static_cast<float>(output.back().y)};
+
 
     return output;
 }
